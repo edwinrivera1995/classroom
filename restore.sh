@@ -13,8 +13,8 @@ MIN_DAYS_PER_MONTH=8
 MAX_DAYS_PER_MONTH=16
 
 # Set author and committer name and email
-AUTHOR_NAME="edwinrivera"
-AUTHOR_EMAIL="edwinrivera1995@gmail.com"
+AUTHOR_NAME="edwinrivera1995"
+AUTHOR_EMAIL="edwinrivera19955@gmail.com"
 
 # Define an array of commit messages (real messages from the project)
 commit_messages=(
