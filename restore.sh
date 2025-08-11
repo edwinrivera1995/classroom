@@ -1,0 +1,93 @@
+#!/bin/bash
+
+# Set start and end date
+START_DATE="2025-02-7"  # YYYY-MM-DD
+END_DATE="2025-05-24"    # YYYY-MM-DD
+
+# Min and max commits per selected day
+MIN_COMMITS=3
+MAX_COMMITS=4
+
+# Min and max days per month to commit
+MIN_DAYS_PER_MONTH=8
+MAX_DAYS_PER_MONTH=16
+
+# Set author and committer name and email
+AUTHOR_NAME="edwinrivera"
+AUTHOR_EMAIL="edwinrivera1995@gmail.com"
+
+# Define an array of commit messages (real messages from the project)
+commit_messages=(
+    "fix: restructure free tools section on landing page"
+    "feat: /contact page on classroomio-com (#428)"
+    "chore: send verification on mount"
+    "fix: theme undefined prevents settings page from loading"
+    "feat: disable umami analytics on localhost for dashboard and classroomio-com (#505)"
+    "chore: migration to SvelteKit 2"
+    "fix: improve name picker ui"
+    "feat: custom org brand color (#474)"
+    "chore: update og on classroomio-com"
+    "fix: progress report bugs"
+    "feat: set org landing page background (#471)"
+    "fix: error 500 for /lms/exercise (#484)"
+    "chore: sidebar and brand color styling improvements"
+    "fix: lms sidebar text in dark mode is black"
+    "feat: add api app"
+    "chore: update supabase custom domain"
+    "fix: add optional chaining to bg show"
+    "docs: self-hosting guide v1 (#481)"
+    "fix: Update README.md with correct ports(#485)"
+    "feat: Integrate Sentry to backend (#270)"
+)
+
+# Convert START_DATE to first day of the month
+current_date=$(date -d "$START_DATE" +"%Y-%m-01")
+
+# Loop through each month in the date range
+while [[ "$current_date" < "$END_DATE" ]] || [[ "$current_date" == "$END_DATE" ]]; do
+    # Get number of days in the current month
+    days_in_month=$(date -d "$current_date +1 month -1 day" +"%d")
+
+    # Random number of commit days for the month
+    num_commit_days=$(( RANDOM % (MAX_DAYS_PER_MONTH - MIN_DAYS_PER_MONTH + 1) + MIN_DAYS_PER_MONTH ))
+
+    # Select random days in the month
+    commit_days=()
+    while [[ ${#commit_days[@]} -lt $num_commit_days ]]; do
+        random_day=$(( RANDOM % days_in_month + 1 ))
+        if [[ ! " ${commit_days[@]} " =~ " $random_day " ]]; then
+            commit_days+=("$random_day")
+        fi
+    done
+
+    # Make commits on selected random days
+    for day in "${commit_days[@]}"; do
+        commit_date=$(date -d "$current_date +$((day-1)) days" +"%Y-%m-%d")
+
+        # Random number of commits for the selected day
+        num_commits=$(( RANDOM % (MAX_COMMITS - MIN_COMMITS + 1) + MIN_COMMITS ))
+
+        for ((i=1; i<=num_commits; i++)); do
+            # Generate a random timestamp within the day
+            commit_time=$(date -d "$commit_date $((RANDOM % 24)):$((RANDOM % 60)):$((RANDOM % 60))" +"%Y-%m-%d %H:%M:%S")
+
+            # Pick a random commit message from the array
+            commit_message=${commit_messages[$RANDOM % ${#commit_messages[@]}]}
+
+            # Create or modify a file
+            echo "Commit on $commit_time" >> dummy.txt
+
+            # Add changes
+            git add .
+
+            # Commit with specific author details and timestamp
+            GIT_AUTHOR_NAME="$AUTHOR_NAME" GIT_AUTHOR_EMAIL="$AUTHOR_EMAIL" \
+            GIT_COMMITTER_NAME="$AUTHOR_NAME" GIT_COMMITTER_EMAIL="$AUTHOR_EMAIL" \
+            GIT_COMMITTER_DATE="$commit_time" GIT_AUTHOR_DATE="$commit_time" \
+            git commit -m "$commit_message"
+        done
+    done
+
+    # Move to the first day of the next month
+    current_date=$(date -d "$current_date +1 month" +"%Y-%m-01")
+done
