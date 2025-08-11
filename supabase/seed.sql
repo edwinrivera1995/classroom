@@ -19,7 +19,7 @@ INSERT INTO "auth"."users" ("instance_id", "id", "aud", "role", "email", "encryp
 -- Data for Name: identities; Type: TABLE DATA; Schema: auth; Owner: supabase_auth_admin
 --
 
-INSERT INTO "auth"."identities" ("provider_id", "user_id", "identity_data", "provider", "last_sign_in_at", "created_at", "updated_at") VALUES
+INSERT INTO "auth"."identities" ("id", "user_id", "identity_data", "provider", "last_sign_in_at", "created_at", "updated_at") VALUES
 	('01676a50-bb56-4c5e-8a61-fb9e9190fb10', '01676a50-bb56-4c5e-8a61-fb9e9190fb10', '{"sub": "01676a50-bb56-4c5e-8a61-fb9e9190fb10", "email": "test@test.com"}', 'email', '2023-11-22 10:09:32.225444+00', '2023-11-22 10:09:32.225521+00', '2023-11-22 10:09:32.225521+00'),
 	('7ac00503-8519-43c8-a5ea-b79aeca900b1', '7ac00503-8519-43c8-a5ea-b79aeca900b1', '{"sub": "7ac00503-8519-43c8-a5ea-b79aeca900b1", "email": "admin@test.com"}', 'email', '2023-12-16 14:04:38.302264+00', '2023-12-16 14:04:38.302326+00', '2023-12-16 14:04:38.302326+00'),
 	('0c256e75-aa40-4f62-8d30-0217ca1c60d9', '0c256e75-aa40-4f62-8d30-0217ca1c60d9', '{"sub": "0c256e75-aa40-4f62-8d30-0217ca1c60d9", "email": "student@test.com"}', 'email', '2023-12-18 17:08:57.410285+00', '2023-12-18 17:08:57.410344+00', '2023-12-18 17:08:57.410344+00');
@@ -462,3 +462,11 @@ INSERT INTO "storage"."buckets" ("id", "name", "owner", "created_at", "updated_a
 SELECT PG_GET_SERIAL_SEQUENCE('organizationmember', 'id');
 -- In my case i got "public.organizationmember_id_seq"
 SELECT setval('public.organizationmember_id_seq', COALESCE((SELECT MAX(id)+1 FROM organizationmember), 1), false);
+
+--
+-- Data for Name: organization_plan; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."organization_plan" ("id", "org_id", "plan_name", "is_active", "deactivated_at", "payload", "triggered_by", "activated_at", "updated_at", "provider", "subscription_id") VALUES
+	(1, '1a1dcddd-1abc-4f72-b644-0bd18191a289', 'ENTERPRISE', true, NULL, NULL, 12, '2023-11-22 09:29:04.533114+00', '2023-11-22 09:29:04.533114+00', 'lmz', NULL);
+

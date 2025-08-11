@@ -107,8 +107,7 @@
         {/key}
       </div>
     </div>
-
-    <!-- free tools section -->
+ <!-- free tools section -->
     <div class="mt-10">
       <div class="text-center">
         <h1 class="text-3xl md:text-5xl font-bold m-0">
