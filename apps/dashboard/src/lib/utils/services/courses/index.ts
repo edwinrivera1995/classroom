@@ -1,26 +1,28 @@
-import { get } from 'svelte/store';
-import { supabase } from '$lib/utils/functions/supabase';
-import { isUUID } from '$lib/utils/functions/isUUID';
-import { QUESTION_TYPE } from '$lib/components/Question/constants';
 import type {
-  Lesson,
   Course,
+  Exercise,
+  ExerciseTemplate,
   Group,
   Groupmember,
-  Exercise,
+  Lesson,
   LessonCompletion,
-  ExerciseTemplate,
-  LessonSection
+  LessonSection,
+  ProfileCourseProgress
 } from '$lib/utils/types';
+import type { PostgrestError, PostgrestSingleResponse } from '@supabase/supabase-js';
+
+import { QUESTION_TYPE } from '$lib/components/Question/constants';
 import { STATUS } from '$lib/utils/constants/course';
-import type { PostgrestSingleResponse, PostgrestError } from '@supabase/supabase-js';
-import type { ProfileCourseProgress } from '$lib/utils/types';
+import { apiClient } from '$lib/utils/services/api';
+import { get } from 'svelte/store';
 import { isOrgAdmin } from '$lib/utils/store/org';
+import { isUUID } from '$lib/utils/functions/isUUID';
+import { supabase } from '$lib/utils/functions/supabase';
 
 export async function fetchCourses(profileId, orgId) {
   if (!orgId || !profileId) return;
 
-  const match = {};
+  const match: { member_profile_id?: string } = {};
   // Filter by profile_id if role isn't admin within organization
   if (!get(isOrgAdmin)) {
     match.member_profile_id = profileId;
@@ -57,6 +59,18 @@ export async function fetchProfileCourseProgress(
       profile_id_arg: profileId
     })
     .returns<ProfileCourseProgress[]>();
+
+  return { data, error };
+}
+
+export async function checkExercisesComplete(
+  lessonId: Lesson['id'],
+  groupMemberId: Groupmember['id']
+) {
+  const { data, error } = await supabase.rpc('check_if_student_completed_exercises', {
+    lesson_id_arg: lessonId,
+    groupmember_id_arg: groupMemberId
+  });
 
   return { data, error };
 }
@@ -132,10 +146,7 @@ export async function fetchCourse(courseId?: Course['id'], slug?: Course['slug']
 
   const { data, error } = response;
 
-  console.log(`error`, error);
-  console.log(`data`, data);
   if (!data || error) {
-    console.log(`data`, data);
     console.log(`fetchCourse => error`, error);
     // return this.redirect(307, '/courses');
     return { data, error };
@@ -244,8 +255,17 @@ export function deleteGroupMember(groupMemberId: Groupmember['id']) {
   return supabase.from('groupmember').delete().match({ id: groupMemberId });
 }
 
-export function fetchLesson(lessonId: Lesson['id']) {
-  return supabase
+export async function getMarks(courseId) {
+  if (!courseId) return;
+
+  // Gets courses for a particular organisation where the current logged in user is a groupmember
+  const { data: marks } = await supabase.rpc('get_marks').eq('course_id', courseId);
+
+  return { marks };
+}
+
+export async function fetchLesson(lessonId: Lesson['id']) {
+  const { data, error } = await supabase
     .from('lesson')
     .select(
       `id,
@@ -262,6 +282,29 @@ export function fetchLesson(lessonId: Lesson['id']) {
     )
     .eq('id', lessonId)
     .single();
+
+  if (data) {
+    const keys = data.videos.filter((video) => video.type === 'upload').map((video) => video.key);
+
+    if (!keys.length) {
+      return { data, error };
+    }
+
+    try {
+      const response = await apiClient.post('/course/presign/download', { keys });
+
+      data.videos = data.videos.map((video) => {
+        if (video.type === 'upload') {
+          video.link = response.data.urls[video.key];
+        }
+        return video;
+      });
+    } catch (error) {
+      console.error('Error retrieving videos:', error);
+    }
+  }
+
+  return { data, error };
 }
 
 export function fetchLesssonLanguageHistory(lessonId: string, locale: string, endRange: number) {
